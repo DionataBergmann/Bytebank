@@ -4,6 +4,8 @@ Este é um projeto criado com [Next.js](https://nextjs.org), [Tailwind CSS](http
 
 🎓 Projeto desenvolvido como parte da **Fase 1 do MBA em Engenharia Frontend** na **FIAP**.
 
+📺 [YT - Vídeo demonstrativo](https://youtu.be/SjfjRfZSjK0)
+
 ## 🚀 Getting Started
 
 ### 1. Instalar dependências
