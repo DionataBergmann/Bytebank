@@ -1,5 +1,5 @@
-import HomePage from '@/components/pages/HomePage'
+import LandingPage from '@/components/pages/LandingPage'
 
-export default function Home() {
-  return <HomePage />
+export default function Index() {
+  return <LandingPage />
 }
