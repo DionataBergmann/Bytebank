@@ -1,26 +1,29 @@
 import { useState } from "react";
+import Link from "next/link";
+import { FiX } from "react-icons/fi";
 import Header from "../Header";
-import { FiX } from 'react-icons/fi';
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+type Props = {
+  children: React.ReactNode;
+};
+
+const menuLinks = [
+  { label: "Início", href: "/home" },
+  { label: "Transferências", href: "/transferencias" },
+  { label: "Investimentos", href: "/investments" },
+  { label: "Outros serviços", href: "/outros-servicos" },
+];
+
+export default function MainLayout({ children }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const menuItems = (
-    <>
-      <span className="text-[var(--primary-blue)] text-[16px] font-bold border-b-[2px] pb-2">
-        Início
+  const menuItems = menuLinks.map((item, i) => (
+    <Link key={i} href={item.href}>
+      <span className={`text-[var(--primary-blue)] text-[16px] cursor-pointer ${i === 0 ? "font-bold border-b-[2px]" : "lg:border-b-[2px]"} pb-2`}>
+        {item.label}
       </span>
-      <span className="text-[var(--primary-blue)] text-[16px] cursor-pointer lg:border-b-[2px] pb-2">
-        Transferências
-      </span>
-      <span className="text-[var(--primary-blue)] text-[16px] cursor-pointer lg:border-b-[2px] pb-2">
-        Investimentos
-      </span>
-      <span className="text-[var(--primary-blue)] text-[16px] cursor-pointer">
-        Outros serviços
-      </span>
-    </>
-  );
+    </Link>
+  ));
 
   return (
     <div className="min-h-screen bg-[#eaf0e9]">
@@ -48,10 +51,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           </nav>
         </aside>
 
-        <main className="flex-1">
-          {children}
-        </main>
+        <main className="flex-1">{children}</main>
       </div>
     </div>
-  )
+  );
 }
