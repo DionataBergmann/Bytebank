@@ -3,10 +3,11 @@ import { useEffect, useState } from 'react'
 
 export type Transaction = {
   id: number
-  type: 'Depósito' | 'Transferência'
+  type: 'Entrada' | 'Saída'
   value: number
   date: string
   category: string
+  file?: File
   isEditing?: boolean
 }
 
