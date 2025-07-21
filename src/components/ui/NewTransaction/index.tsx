@@ -64,7 +64,7 @@ export default function NewTransaction({ addTransaction }: Props) {
     const formattedDate = today.toLocaleDateString('pt-BR')
 
     addTransaction({
-      id: Date.now(),
+      id: Math.floor(Math.random() * 1000000),
       type,
       value: signedValue,
       date: formattedDate,
@@ -166,7 +166,10 @@ export default function NewTransaction({ addTransaction }: Props) {
           <TextField
             type="number"
             value={value}
-            onChange={(e) => setValue(Number(e.target.value))}
+            onChange={(e) => {
+              const input = Number(e.target.value)
+              if (input >= 0) setValue(input)
+            }}
             label="Valor"
             placeholder="Digite o valor"
             InputLabelProps={{ shrink: true }}
