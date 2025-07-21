@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react'
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Select, MenuItem, TextField, FormControl } from '@mui/material'
-import { Transaction } from '@/components/pages/HomePage'
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  Typography,
+  Autocomplete
+} from '@mui/material'
+import AttachFileIcon from '@mui/icons-material/AttachFile'
+import { Transaction } from '@/hooks/useTransactions'
+import { useSnackbar } from 'notistack'
 
 type Props = {
   open: boolean
@@ -9,82 +20,219 @@ type Props = {
   transaction: Transaction | null
 }
 
+const categoryOptions = [
+  { label: 'Fundos de investimento', group: 'Investimentos' },
+  { label: 'Tesouro Direto', group: 'Investimentos' },
+  { label: 'Previdência Privada', group: 'Investimentos' },
+  { label: 'Bolsa de Valores', group: 'Investimentos' },
+  { label: 'Criptomoedas', group: 'Investimentos' },
+  { label: 'CDB / RDB', group: 'Investimentos' },
+  { label: 'FII', group: 'Investimentos' },
+  { label: 'ETFs', group: 'Investimentos' },
+  { label: 'Salário', group: 'Receitas' },
+  { label: 'Renda Extra', group: 'Receitas' },
+  { label: 'Alimentação', group: 'Despesas' },
+  { label: 'Transporte', group: 'Despesas' },
+  { label: 'Saúde', group: 'Despesas' },
+  { label: 'Educação', group: 'Despesas' },
+  { label: 'Lazer', group: 'Despesas' },
+  { label: 'Moradia', group: 'Despesas' }
+]
+
 export default function EditTransactionModal({ open, onClose, onSave, transaction }: Props) {
-  const [type, setType] = useState<'Depósito' | 'Transferência'>('Depósito')
+  const { enqueueSnackbar } = useSnackbar()
+
+  const [type, setType] = useState<'Entrada' | 'Saída'>('Entrada')
   const [value, setValue] = useState<number>(0)
+  const [category, setCategory] = useState<string | null>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [existingFileName, setExistingFileName] = useState<string | null>(null)
 
   useEffect(() => {
     if (transaction) {
-      setType(transaction.type)
+      setType(transaction.type as 'Entrada' | 'Saída')
       setValue(Math.abs(transaction.value))
+      setCategory(transaction.category ?? null)
+
+      if ('file' in transaction && transaction.file) {
+        setExistingFileName((transaction.file as File).name || null)
+      } else {
+        setExistingFileName(null)
+      }
     }
   }, [transaction])
 
   const handleClose = () => {
-    setType('Depósito')
+    setType('Entrada')
     setValue(0)
+    setCategory(null)
+    setFile(null)
+    setExistingFileName(null)
     onClose()
   }
 
   const handleSave = () => {
     if (transaction) {
-      const signedValue = type === 'Transferência' ? -Math.abs(value) : Math.abs(value)
-      onSave(transaction.id, { type, value: signedValue })
+      const signedValue = type === 'Saída' ? -Math.abs(value) : Math.abs(value)
+      const updatedData: Partial<Transaction> = {
+        type,
+        value: signedValue,
+        category: category ?? '',
+        file: file || transaction.file // novo file se houver, senão mantém o antigo
+      }
+
+      onSave(transaction.id, updatedData)
+      enqueueSnackbar('Transação atualizada com sucesso!', { variant: 'success' })
     }
+
     handleClose()
   }
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ backgroundColor: 'var(--background-gray)', color: 'var(--azureish-White)' }}>
+      <DialogTitle sx={{ backgroundColor: 'var(--background-gray)', color: 'var(--azureish-white)' }}>
         Editar Transação
       </DialogTitle>
 
       <DialogContent
-        sx={{ backgroundColor: 'var(--background-gray)', display: 'flex', flexDirection: 'column', gap: 2, pt: 3 }}
+        sx={{
+          backgroundColor: 'var(--background-gray)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+          pt: 3
+        }}
       >
-        <FormControl sx={{ width: '100%' }}>
-          <Select
-            value={type}
-            onChange={(e) => setType(e.target.value as 'Depósito' | 'Transferência')}
-            variant="outlined"
+        <div className="flex gap-2">
+          <Button
+            variant={type === 'Entrada' ? 'contained' : 'outlined'}
+            onClick={() => setType('Entrada')}
             sx={{
-              height: '40px',
-              '& .MuiSelect-select': {
-                color: 'var(--outer-space-gray)',
-              },
-              '& .MuiSelect-icon': {
-                color: 'var(--primary-blue)',
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'var(--primary-blue)',
-                borderRadius: '8px',
-              },
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 600,
+              backgroundColor: type === 'Entrada' ? 'var(--green-entry)' : 'transparent',
+              color: type === 'Entrada' ? 'white' : 'var(--green-entry)',
+              borderColor: 'var(--green-entry)',
+              minWidth: 120,
+              '&:hover': {
+                backgroundColor:
+                  type === 'Entrada'
+                    ? 'var(--green-entry-hover)'
+                    : 'var(--green-entry-bg-light)'
+              }
             }}
           >
-            <MenuItem value="Depósito">Depósito</MenuItem>
-            <MenuItem value="Transferência">Transferência</MenuItem>
-          </Select>
-        </FormControl>
+            Entrada
+          </Button>
+          <Button
+            variant={type === 'Saída' ? 'contained' : 'outlined'}
+            onClick={() => setType('Saída')}
+            sx={{
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 600,
+              backgroundColor: type === 'Saída' ? 'var(--red-exit)' : 'transparent',
+              color: type === 'Saída' ? 'white' : 'var(--red-exit)',
+              borderColor: 'var(--red-exit)',
+              minWidth: 120,
+              '&:hover': {
+                backgroundColor:
+                  type === 'Saída'
+                    ? 'var(--red-exit-hover)'
+                    : 'var(--red-exit-bg-light)'
+              }
+            }}
+          >
+            Saída
+          </Button>
+        </div>
 
+        {/* Categoria */}
+        <Autocomplete
+          options={categoryOptions}
+          groupBy={(option) => option.group}
+          getOptionLabel={(option) => option.label}
+          value={categoryOptions.find((opt) => opt.label === category) || null}
+          onChange={(_, newValue) => setCategory(newValue?.label ?? null)}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Categoria"
+              placeholder="Escolha ou digite uma categoria"
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': { borderColor: 'var(--primary-blue)' },
+                  borderRadius: '8px'
+                }
+              }}
+            />
+          )}
+        />
+
+        {/* Valor */}
         <TextField
           type="number"
+          label="Valor"
+          placeholder="Digite o valor"
           value={value}
           onChange={(e) => setValue(Number(e.target.value))}
-          placeholder="Valor"
+          InputLabelProps={{ shrink: true }}
           sx={{
             '& input': {
-              padding: '10px 14px',
+              padding: '10px 14px'
             },
             '& .MuiOutlinedInput-root': {
               '& fieldset': {
-                borderColor: 'var(--primary-blue)',
+                borderColor: 'var(--primary-blue)'
               },
-              borderRadius: '8px',
-            },
+              borderRadius: '8px'
+            }
           }}
           fullWidth
         />
+
+        {/* Upload comprovante */}
+        <div className="flex flex-col gap-2">
+          <Button
+            variant="contained"
+            component="label"
+            startIcon={<AttachFileIcon />}
+            sx={{
+              backgroundColor: 'var(--primary-blue)',
+              borderRadius: '8px',
+              padding: '12px 16px',
+              fontWeight: 600,
+              textTransform: 'none',
+              width: 'fit-content',
+              '&:hover': {
+                backgroundColor: 'var(--primary-blue)'
+              }
+            }}
+          >
+            Anexar comprovante
+            <input
+              type="file"
+              accept=".png,.jpg,.jpeg,.pdf"
+              hidden
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
+          </Button>
+
+          {file && (
+            <Typography sx={{ fontSize: 14, color: 'var(--outer-space-gray)' }}>
+              Novo arquivo selecionado: <strong>{file.name}</strong>
+            </Typography>
+          )}
+
+          {!file && existingFileName && (
+            <Typography sx={{ fontSize: 14, color: 'var(--outer-space-gray)' }}>
+              Arquivo atual: <strong>{existingFileName}</strong>
+            </Typography>
+          )}
+        </div>
       </DialogContent>
 
       <DialogActions sx={{ backgroundColor: 'var(--background-gray)', p: 2 }}>

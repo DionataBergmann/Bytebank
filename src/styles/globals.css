@@ -8,6 +8,15 @@
   --azureish-white: #DEE9EA;
   --outer-space-gray: #444444;
   --may-green: #47A138;
+  --blue: #2567F9;
+
+  --green-entry: #4CAF50;
+  --green-entry-hover: #45A049;
+  --green-entry-bg-light: rgba(76, 175, 80, 0.1);
+
+  --red-exit: #F44336;
+  --red-exit-hover: #E53935;
+  --red-exit-bg-light: rgba(244, 67, 54, 0.1);
 
   --font-sans: 'Inter', sans-serif;
 }

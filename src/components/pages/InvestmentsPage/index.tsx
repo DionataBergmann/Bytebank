@@ -1,13 +1,12 @@
+import Dashboard from '@/components/layout/Dashboard'
 import MainLayout from '@/components/layout/MainLayout'
 import BalanceCard from '@/components/ui/BalanceCard'
-import NewTransaction from '@/components/ui/NewTransaction'
 import TransactionList from '@/components/ui/TransactionList'
 import { useTransactions } from '@/hooks/useTransactions'
 
-export default function HomePage() {
+export default function InvestmentsPage() {
   const {
     transactions,
-    addTransaction,
     handleDeleteTransaction,
     handleEditTransaction,
     handleSaveTransaction,
@@ -15,10 +14,10 @@ export default function HomePage() {
 
   return (
     <MainLayout>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-40 mx-auto max-w-6xl">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-40 mx-auto max-w-6xl ">
         <div className="md:col-span-2 flex flex-col gap-6">
           <BalanceCard transactions={transactions} />
-          <NewTransaction addTransaction={addTransaction} />
+          <Dashboard transactions={transactions} />
         </div>
 
         <div>

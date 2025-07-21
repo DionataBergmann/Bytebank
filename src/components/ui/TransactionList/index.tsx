@@ -1,6 +1,14 @@
-import { Transaction } from '@/components/pages/HomePage'
-import { useState } from 'react'
+'use client'
+
+import { useEffect, useState } from 'react'
 import EditTransactionModal from '../EditTransactionModal'
+import FilterModal from '../FilterModal'
+import FilterListIcon from '@mui/icons-material/FilterList'
+import ClearIcon from '@mui/icons-material/Clear'
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew'
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos'
+import { Badge, Tooltip } from '@mui/material'
+import { Transaction } from '@/hooks/useTransactions'
 
 type Props = {
   transactions: Transaction[]
@@ -9,13 +17,13 @@ type Props = {
   onSave: (id: number, updated: Partial<Transaction>) => void
 }
 
+const ITEMS_PER_PAGE = 10
+
 function groupByMonth(transactions: Transaction[]) {
   return transactions.reduce((groups, tx) => {
-    const [day, month] = tx.date.split('/')
+    const [_, month] = tx.date.split('/')
     const key = Number(month)
-    if (!groups[key]) {
-      groups[key] = []
-    }
+    if (!groups[key]) groups[key] = []
     groups[key].push(tx)
     return groups
   }, {} as { [key: number]: Transaction[] })
@@ -26,14 +34,40 @@ function getMonthName(month: number) {
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ]
-  return meses[month - 1]
+  return meses[month - 1] || 'Mês inválido'
+}
+
+function countActiveFilters(filters: Record<string, any>) {
+  return Object.values(filters).filter(val => val !== '' && val !== null).length
 }
 
 export default function TransactionList({ transactions, onDelete, onSave }: Props) {
-  const grouped = groupByMonth(transactions)
+  const [hasMounted, setHasMounted] = useState(false)
+
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
+
+  const [filterType, setFilterType] = useState('')
+  const [minValue, setMinValue] = useState<number | ''>('')
+  const [maxValue, setMaxValue] = useState<number | ''>('')
+  const [filterMonth, setFilterMonth] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [showFilterModal, setShowFilterModal] = useState(false)
+
+  const [appliedFilters, setAppliedFilters] = useState({
+    filterType: '',
+    filterMonth: '',
+    minValue: '',
+    maxValue: '',
+    startDate: '',
+    endDate: ''
+  })
 
   const [open, setOpen] = useState(false)
   const [currentTx, setCurrentTx] = useState<Transaction | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const handleEditClick = (tx: Transaction) => {
     setCurrentTx(tx)
@@ -45,40 +79,144 @@ export default function TransactionList({ transactions, onDelete, onSave }: Prop
     setCurrentTx(null)
   }
 
+  const clearFilters = () => {
+    setFilterType('')
+    setFilterMonth('')
+    setMinValue('')
+    setMaxValue('')
+    setStartDate('')
+    setEndDate('')
+    setAppliedFilters({
+      filterType: '',
+      filterMonth: '',
+      minValue: '',
+      maxValue: '',
+      startDate: '',
+      endDate: ''
+    })
+  }
+
+  const filteredTransactions = transactions.filter((tx) => {
+    const [day, month, year] = tx.date.split('/')
+    const txMonth = Number(month)
+    const txDateISO = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+
+    const matchType = appliedFilters.filterType ? tx.type === appliedFilters.filterType : true
+    const matchMin = appliedFilters.minValue !== '' ? tx.value >= appliedFilters.minValue : true
+    const matchMax = appliedFilters.maxValue !== '' ? tx.value <= appliedFilters.maxValue : true
+    const matchMonth = appliedFilters.filterMonth ? txMonth === Number(appliedFilters.filterMonth) : true
+    const matchDateStart = appliedFilters.startDate ? new Date(txDateISO) >= new Date(appliedFilters.startDate) : true
+    const matchDateEnd = appliedFilters.endDate ? new Date(txDateISO) <= new Date(appliedFilters.endDate) : true
+
+    return matchType && matchMin && matchMax && matchMonth && matchDateStart && matchDateEnd
+  })
+
+  const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const paginatedTransactions = filteredTransactions.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+  const grouped = groupByMonth(paginatedTransactions)
+  const activeFiltersCount = countActiveFilters(appliedFilters)
+
   return (
     <div className="bg-white shadow rounded p-4 w-full lg:min-w-[270px]">
-      <h3 className="text-lg font-semibold text-gray-700 mb-4">Extrato</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-gray-700">Extrato</h3>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowFilterModal(true)}
+            className="p-1 rounded hover:bg-gray-100"
+            title="Filtrar"
+            aria-label="Abrir filtros"
+          >
+            <Badge
+              badgeContent={activeFiltersCount}
+              color="primary"
+              overlap="circular"
+              invisible={activeFiltersCount === 0}
+              sx={{
+                '& .MuiBadge-badge': {
+                  backgroundColor: '#004D61',
+                  color: 'white',
+                  fontSize: '0.6rem',
+                  minWidth: 16,
+                  height: 16,
+                  padding: '0 4px'
+                }
+              }}
+            >
+              <FilterListIcon className="text-gray-700" />
+            </Badge>
+          </button>
+          <button
+            onClick={clearFilters}
+            className="p-1 rounded hover:bg-gray-100"
+            title="Limpar filtros"
+            aria-label="Limpar filtros"
+          >
+            <ClearIcon className="text-gray-700" />
+          </button>
+        </div>
+      </div>
 
-      {transactions.length === 0 ? (
-        <p className="text-gray-400 text-sm italic text-center">Nenhuma transação encontrada.</p>
+      {hasMounted && paginatedTransactions.length === 0 ? (
+        <p className="text-gray-400 text-sm italic text-center">
+          Nenhuma transação encontrada.
+        </p>
       ) : (
-        Object.keys(grouped).sort((a, b) => Number(b) - Number(a)).map((month) => (
-          <div key={month} className="mb-4">
-            <h4 className="text-[var(--primary-blue)] text-[13px]">{getMonthName(Number(month))}</h4>
-            <ul className="divide-y divide-gray-200 text-[var(--background-gray)]">
-              {grouped[Number(month)].map((tx) => (
-                <li key={tx.id} className="py-2 text-sm">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p>{tx.type} - {tx.date.split('/').slice(0, 2).join('/')}</p>
-                      <p className={tx.value >= 0 ? 'text-green-600' : 'text-red-600'}>
-                        R$ {tx.value.toFixed(2)}
-                      </p>
+        hasMounted &&
+        Object.keys(grouped)
+          .sort((a, b) => Number(b) - Number(a))
+          .map((month) => (
+            <div key={month} className="mb-4">
+              <h4 className="text-[var(--primary-blue)] text-[13px]">
+                {getMonthName(Number(month))}
+              </h4>
+              <ul className="divide-y divide-gray-200 text-[var(--background-gray)]">
+                {grouped[Number(month)].map((tx) => (
+                  <li key={tx.id} className="py-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <Tooltip title={tx.category || 'Sem categoria'}>
+                          <p className="cursor-help">{tx.type} - {tx.date.split('/').slice(0, 2).join('/')}</p>
+                        </Tooltip>
+                        <p className={tx.value >= 0 ? 'text-green-600' : 'text-red-600'}>
+                          R$ {tx.value.toFixed(2)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => handleEditClick(tx)} aria-label="Editar transação">
+                          <img src="/pincel.svg" alt="Editar" className="w-5 h-5 cursor-pointer" />
+                        </button>
+                        <button onClick={() => onDelete(tx.id)} aria-label="Excluir transação">
+                          <img src="/trash.svg" alt="Excluir" className="w-5 h-5 cursor-pointer" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => handleEditClick(tx)}>
-                        <img src="/pincel.svg" alt="Editar" className="w-5 h-5 cursor-pointer" />
-                      </button>
-                      <button onClick={() => onDelete(tx.id)}>
-                        <img src="/trash.svg" alt="Excluir" className="w-5 h-5 cursor-pointer" />
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center mt-4 gap-4">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            aria-label="Página anterior"
+          >
+            <ArrowBackIosNewIcon fontSize="small" />
+          </button>
+          <span className="text-sm text-gray-600">{currentPage}</span>
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            aria-label="Próxima página"
+          >
+            <ArrowForwardIosIcon fontSize="small" />
+          </button>
+        </div>
       )}
 
       <EditTransactionModal
@@ -86,6 +224,38 @@ export default function TransactionList({ transactions, onDelete, onSave }: Prop
         onClose={handleClose}
         onSave={onSave}
         transaction={currentTx}
+      />
+
+      <FilterModal
+        open={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        onClear={() => {
+          clearFilters()
+          setShowFilterModal(false)
+        }}
+        filterType={filterType}
+        setFilterType={setFilterType}
+        filterMonth={filterMonth}
+        setFilterMonth={setFilterMonth}
+        minValue={minValue}
+        setMinValue={setMinValue}
+        maxValue={maxValue}
+        setMaxValue={setMaxValue}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        onApply={() => {
+          setAppliedFilters({
+            filterType,
+            filterMonth,
+            minValue,
+            maxValue,
+            startDate,
+            endDate
+          })
+          setShowFilterModal(false)
+        }}
       />
     </div>
   )
