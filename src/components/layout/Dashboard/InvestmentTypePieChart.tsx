@@ -50,7 +50,7 @@ export default function InvestmentTypePieChart({ transactions }: Props) {
                 innerRadius={50}
                 outerRadius={80}
                 dataKey="value"
-                label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                label={({ percent }) => percent !== undefined ? `${(percent * 100).toFixed(0)}%` : ''}
                 labelLine={false}
               >
                 {typeTotals.map((entry, index) => (
