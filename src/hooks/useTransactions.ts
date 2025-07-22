@@ -5,7 +5,7 @@ export type Transaction = {
   type: 'Entrada' | 'Saída'
   value: number
   date: string
-  category: string
+  category: string | null
   file?: File | null
   isEditing?: boolean
 }
