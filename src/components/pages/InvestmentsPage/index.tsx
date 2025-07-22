@@ -1,16 +1,25 @@
+import { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppDispatch, RootState } from '@/store'
+import {
+  fetchTransactions,
+  deleteTransaction,
+  updateTransaction,
+  setEditingState
+} from '@/store/transactionSlice'
+
 import Dashboard from '@/components/layout/Dashboard'
 import MainLayout from '@/components/layout/MainLayout'
 import BalanceCard from '@/components/ui/BalanceCard'
 import TransactionList from '@/components/ui/TransactionList'
-import { useTransactions } from '@/hooks/useTransactions'
 
 export default function InvestmentsPage() {
-  const {
-    transactions,
-    handleDeleteTransaction,
-    handleEditTransaction,
-    handleSaveTransaction,
-  } = useTransactions()
+  const dispatch = useDispatch<AppDispatch>()
+  const { transactions, loading } = useSelector((state: RootState) => state.transactions)
+
+  useEffect(() => {
+    dispatch(fetchTransactions())
+  }, [dispatch])
 
   return (
     <MainLayout>
@@ -23,9 +32,9 @@ export default function InvestmentsPage() {
         <div>
           <TransactionList
             transactions={transactions}
-            onDelete={handleDeleteTransaction}
-            onEdit={handleEditTransaction}
-            onSave={handleSaveTransaction}
+            onDelete={(id) => dispatch(deleteTransaction(id))}
+            onEdit={(id) => dispatch(setEditingState(id))}
+            onSave={(id, updated) => dispatch(updateTransaction({ id, updated }))}
           />
         </div>
       </div>
