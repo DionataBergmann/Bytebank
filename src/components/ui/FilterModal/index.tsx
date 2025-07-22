@@ -21,10 +21,10 @@ type Props = {
   setFilterType: (value: string) => void
   filterMonth: string
   setFilterMonth: (value: string) => void
-  minValue: number | ''
-  setMinValue: (value: number | '') => void
-  maxValue: number | ''
-  setMaxValue: (value: number | '') => void
+  minValue: number | null
+  setMinValue: (value: number | null) => void
+  maxValue: number | null
+  setMaxValue: (value: number | null) => void
   startDate: string
   setStartDate: (value: string) => void
   endDate: string
@@ -106,7 +106,7 @@ export default function FilterModal({
               type="number"
               fullWidth
               value={minValue}
-              onChange={(e) => setMinValue(e.target.value === '' ? '' : Number(e.target.value))}
+              onChange={(e) => setMinValue(e.target.value === '' ? null : Number(e.target.value))}
             />
           </Box>
 
@@ -116,7 +116,7 @@ export default function FilterModal({
               type="number"
               fullWidth
               value={maxValue}
-              onChange={(e) => setMaxValue(e.target.value === '' ? '' : Number(e.target.value))}
+              onChange={(e) => setMaxValue(e.target.value === '' ? null : Number(e.target.value))}
             />
           </Box>
 

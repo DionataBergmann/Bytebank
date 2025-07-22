@@ -49,18 +49,25 @@ export default function TransactionList({ transactions, onDelete, onSave }: Prop
   }, [])
 
   const [filterType, setFilterType] = useState('')
-  const [minValue, setMinValue] = useState<number | ''>('')
-  const [maxValue, setMaxValue] = useState<number | ''>('')
+  const [minValue, setMinValue] = useState<number | null>(null)
+  const [maxValue, setMaxValue] = useState<number | null>(null)
   const [filterMonth, setFilterMonth] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [showFilterModal, setShowFilterModal] = useState(false)
 
-  const [appliedFilters, setAppliedFilters] = useState({
+  const [appliedFilters, setAppliedFilters] = useState<{
+    filterType: string
+    filterMonth: string
+    minValue: number | null
+    maxValue: number | null
+    startDate: string
+    endDate: string
+  }>({
     filterType: '',
     filterMonth: '',
-    minValue: '',
-    maxValue: '',
+    minValue: null,
+    maxValue: null,
     startDate: '',
     endDate: ''
   })
@@ -82,15 +89,15 @@ export default function TransactionList({ transactions, onDelete, onSave }: Prop
   const clearFilters = () => {
     setFilterType('')
     setFilterMonth('')
-    setMinValue('')
-    setMaxValue('')
+    setMinValue(null)
+    setMaxValue(null)
     setStartDate('')
     setEndDate('')
     setAppliedFilters({
       filterType: '',
       filterMonth: '',
-      minValue: '',
-      maxValue: '',
+      minValue: null,
+      maxValue: null,
       startDate: '',
       endDate: ''
     })
@@ -102,8 +109,8 @@ export default function TransactionList({ transactions, onDelete, onSave }: Prop
     const txDateISO = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
 
     const matchType = appliedFilters.filterType ? tx.type === appliedFilters.filterType : true
-    const matchMin = appliedFilters.minValue !== '' ? tx.value >= appliedFilters.minValue : true
-    const matchMax = appliedFilters.maxValue !== '' ? tx.value <= appliedFilters.maxValue : true
+    const matchMin = appliedFilters.minValue !== null ? tx.value >= Number(appliedFilters.minValue) : true
+    const matchMax = appliedFilters.maxValue !== null ? tx.value <= Number(appliedFilters.maxValue) : true
     const matchMonth = appliedFilters.filterMonth ? txMonth === Number(appliedFilters.filterMonth) : true
     const matchDateStart = appliedFilters.startDate ? new Date(txDateISO) >= new Date(appliedFilters.startDate) : true
     const matchDateEnd = appliedFilters.endDate ? new Date(txDateISO) <= new Date(appliedFilters.endDate) : true
