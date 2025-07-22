@@ -25,25 +25,27 @@ const rendaVariavelCategorias = [
 
 export default function SummaryCards({ transactions }: Props) {
   const investimentos = transactions.filter(t =>
-    t.type === 'Entrada' &&
+    t.type === 'Entrada' && typeof t.category === 'string' &&
     (rendaFixaCategorias.includes(t.category) || rendaVariavelCategorias.includes(t.category))
   )
 
   const total = investimentos.reduce((sum, t) => sum + t.value, 0)
 
   const fixed = investimentos
-    .filter(t => rendaFixaCategorias.includes(t.category))
+    .filter(t => typeof t.category === 'string' && rendaFixaCategorias.includes(t.category))
     .reduce((sum, t) => sum + t.value, 0)
 
   const variable = investimentos
-    .filter(t => rendaVariavelCategorias.includes(t.category))
+    .filter(t => typeof t.category === 'string' && rendaVariavelCategorias.includes(t.category))
     .reduce((sum, t) => sum + t.value, 0)
 
   const outros = total - fixed - variable
 
   const categoryTotals: Record<string, number> = {}
   for (const t of investimentos) {
-    categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.value
+    if (typeof t.category === 'string') {
+      categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.value
+    }
   }
 
   const topCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || '-'
