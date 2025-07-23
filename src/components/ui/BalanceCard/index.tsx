@@ -15,7 +15,9 @@ export default function BalanceCard({ transactions }: Props) {
     setHasMounted(true)
   }, [])
 
-  const total = transactions.reduce((sum, t) => sum + t.value, 0)
+  const total = Array.isArray(transactions)
+  ? transactions.reduce((sum, t) => sum + t.value, 0)
+  : 0
 
   const formattedDate = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long',
