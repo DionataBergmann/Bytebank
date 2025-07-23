@@ -103,20 +103,46 @@ export default function TransactionList({ transactions, onDelete, onSave }: Prop
     })
   }
 
-  const filteredTransactions = transactions.filter((tx) => {
-    const [day, month, year] = tx.date.split('/')
-    const txMonth = Number(month)
-    const txDateISO = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+  const filteredTransactions = Array.isArray(transactions)
+    ? transactions.filter((tx) => {
+      const [day, month, year] = tx.date.split('/')
+      const txMonth = Number(month)
+      const txDateISO = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
 
-    const matchType = appliedFilters.filterType ? tx.type === appliedFilters.filterType : true
-    const matchMin = appliedFilters.minValue !== null ? tx.value >= Number(appliedFilters.minValue) : true
-    const matchMax = appliedFilters.maxValue !== null ? tx.value <= Number(appliedFilters.maxValue) : true
-    const matchMonth = appliedFilters.filterMonth ? txMonth === Number(appliedFilters.filterMonth) : true
-    const matchDateStart = appliedFilters.startDate ? new Date(txDateISO) >= new Date(appliedFilters.startDate) : true
-    const matchDateEnd = appliedFilters.endDate ? new Date(txDateISO) <= new Date(appliedFilters.endDate) : true
+      const matchType = appliedFilters.filterType
+        ? tx.type === appliedFilters.filterType
+        : true
 
-    return matchType && matchMin && matchMax && matchMonth && matchDateStart && matchDateEnd
-  })
+      const matchMin = appliedFilters.minValue !== null
+        ? tx.value >= Number(appliedFilters.minValue)
+        : true
+
+      const matchMax = appliedFilters.maxValue !== null
+        ? tx.value <= Number(appliedFilters.maxValue)
+        : true
+
+      const matchMonth = appliedFilters.filterMonth
+        ? txMonth === Number(appliedFilters.filterMonth)
+        : true
+
+      const matchDateStart = appliedFilters.startDate
+        ? new Date(txDateISO) >= new Date(appliedFilters.startDate)
+        : true
+
+      const matchDateEnd = appliedFilters.endDate
+        ? new Date(txDateISO) <= new Date(appliedFilters.endDate)
+        : true
+
+      return (
+        matchType &&
+        matchMin &&
+        matchMax &&
+        matchMonth &&
+        matchDateStart &&
+        matchDateEnd
+      )
+    })
+    : []
 
   const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE)
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE

@@ -6,7 +6,7 @@ export type Transaction = {
   value: number
   date: string
   category: string | null
-  file?: File | null
+  file?: File | string | null
   isEditing?: boolean
 }
 

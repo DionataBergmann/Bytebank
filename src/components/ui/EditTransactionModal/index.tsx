@@ -54,8 +54,8 @@ export default function EditTransactionModal({ open, onClose, onSave, transactio
       setValue(Math.abs(transaction.value))
       setCategory(transaction.category ?? null)
 
-      if ('file' in transaction && transaction.file) {
-        setExistingFileName((transaction.file as File).name || null)
+      if (transaction.file && typeof transaction.file === 'string') {
+        setExistingFileName(transaction.file)
       } else {
         setExistingFileName(null)
       }

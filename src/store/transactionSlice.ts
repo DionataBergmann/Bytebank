@@ -6,7 +6,7 @@ export type Transaction = {
   value: number
   date: string
   category: string | null
-  file?: File | null
+  file?: File | string | null
   isEditing?: boolean
 }
 
@@ -14,8 +14,16 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/transa
 
 export const fetchTransactions = createAsyncThunk(
   'transactions/fetchTransactions',
-  async () => {
-    const response = await fetch(API_URL)
+  async (_, { getState }) => {
+    const state = getState() as { auth: { token: string } }
+    const token = state.auth.token
+
+    const response = await fetch(API_URL, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
     const data = await response.json()
     return data as Transaction[]
   }
@@ -23,12 +31,25 @@ export const fetchTransactions = createAsyncThunk(
 
 export const addTransaction = createAsyncThunk(
   'transactions/addTransaction',
-  async (transaction: Transaction) => {
+  async (transaction: Transaction, { getState }) => {
+    const state = getState() as { auth: { token: string } }
+    const token = state.auth.token
+
+    const formData = new FormData()
+    formData.append('type', transaction.type)
+    formData.append('value', String(transaction.value))
+    formData.append('date', transaction.date)
+    if (transaction.category) formData.append('category', transaction.category)
+    if (transaction.file instanceof File) formData.append('file', transaction.file)
+
     const response = await fetch(API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(transaction)
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: formData
     })
+
     const data = await response.json()
     return data as Transaction
   }
@@ -36,35 +57,43 @@ export const addTransaction = createAsyncThunk(
 
 export const deleteTransaction = createAsyncThunk(
   'transactions/deleteTransaction',
-  async (id: number) => {
+  async (id: number, { getState }) => {
+    const state = getState() as { auth: { token: string } }
+    const token = state.auth.token
+
     await fetch(`${API_URL}/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     })
+
     return id
   }
 )
 
 export const updateTransaction = createAsyncThunk(
   'transactions/updateTransaction',
-  async ({ id, updated }: { id: number; updated: Partial<Transaction> }) => {
-    const response = await fetch(`${API_URL}/${id}`)
-    const existing = await response.json()
+  async ({ id, updated }: { id: number; updated: Partial<Transaction> }, { getState }) => {
+    const state = getState() as { auth: { token: string } }
+    const token = state.auth.token
 
-    const updatedData = {
-      ...existing,
-      ...updated,
-      id: Number(id), 
-      file:
-        updated.file instanceof File
-          ? updated.file.name
-          : updated.file ?? null,
-      isEditing: false
+    const formData = new FormData()
+    formData.append('type', updated.type!)
+    formData.append('value', String(updated.value!))
+    formData.append('date', updated.date || new Date().toISOString())
+    formData.append('category', updated.category || '')
+
+    if (updated.file instanceof File) {
+      formData.append('file', updated.file)
     }
 
     const res = await fetch(`${API_URL}/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updatedData)
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: formData
     })
 
     const data = await res.json()
@@ -75,7 +104,6 @@ export const updateTransaction = createAsyncThunk(
     } as Transaction
   }
 )
-
 
 type TransactionState = {
   transactions: Transaction[]

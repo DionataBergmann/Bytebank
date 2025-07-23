@@ -1,20 +1,43 @@
+'use client'
+
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from '@/store'
+import { useRouter } from 'next/router'
 
 import MainLayout from '@/components/layout/MainLayout'
 import BalanceCard from '@/components/ui/BalanceCard'
 import NewTransaction from '@/components/ui/NewTransaction'
 import TransactionList from '@/components/ui/TransactionList'
-import { addTransaction, deleteTransaction, fetchTransactions, setEditingState, updateTransaction } from '@/store/transactionSlice'
+import {
+  addTransaction,
+  deleteTransaction,
+  fetchTransactions,
+  setEditingState,
+  updateTransaction
+} from '@/store/transactionSlice'
 
 export default function HomePage() {
   const dispatch = useDispatch<AppDispatch>()
-  const { transactions, loading } = useSelector((state: RootState) => state.transactions)
+  const router = useRouter()
+
+   const { transactions, loading } = useSelector((state: RootState) => state.transactions)
+  const token = useSelector((state: RootState) => state.auth.token)
+  const initialized = useSelector((state: RootState) => state.auth.initialized)
 
   useEffect(() => {
+    if (!initialized) return
+
+    if (!token) {
+      router.push('/')
+      return
+    }
+
     dispatch(fetchTransactions())
-  }, [dispatch])
+  }, [dispatch, token, router, initialized])
+
+  if (!initialized) return null 
+  if (!token) return null
 
   return (
     <MainLayout>
