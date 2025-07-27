@@ -1,5 +1,5 @@
-import InvestmentsPage from '@/components/pages/InvestmentsPage'
-
-export default function Home() {
-  return <InvestmentsPage />
+export default function Investments() {
+  return (
+    <div id="root" className="w-full h-full" />
+  )
 }
