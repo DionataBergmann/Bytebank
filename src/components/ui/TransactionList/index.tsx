@@ -19,12 +19,20 @@ type Props = {
 
 const ITEMS_PER_PAGE = 10
 
-function groupByMonth(transactions: Transaction[]) {
+const parseDate = (dateStr: string) => {
+  const [day, month, year] = dateStr.split('/')
+  return `${year}-${month}-${day}`
+}
+
+const groupByMonth = (transactions: Transaction[]) => {
   return transactions.reduce((groups, tx) => {
-    const [_, month] = tx.date.split('/')
-    const key = Number(month)
-    if (!groups[key]) groups[key] = []
-    groups[key].push(tx)
+    const parsedDate = tx.date.includes('/')
+      ? new Date(parseDate(tx.date))
+      : new Date(tx.date)
+
+    const month = parsedDate.getMonth() 
+    if (!groups[month]) groups[month] = []
+    groups[month].push(tx)
     return groups
   }, {} as { [key: number]: Transaction[] })
 }
@@ -105,9 +113,14 @@ export default function TransactionList({ transactions, onDelete, onSave }: Prop
 
   const filteredTransactions = Array.isArray(transactions)
     ? transactions.filter((tx) => {
-      const [day, month, year] = tx.date.split('/')
+      if (!tx.date) return false
+
+      const dateObj = new Date(tx.date)
+      const day = String(dateObj.getDate()).padStart(2, '0')
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0') // zero-based
+      const year = String(dateObj.getFullYear())
       const txMonth = Number(month)
-      const txDateISO = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+      const txDateISO = `${year}-${month}-${day}`
 
       const matchType = appliedFilters.filterType
         ? tx.type === appliedFilters.filterType
@@ -210,7 +223,9 @@ export default function TransactionList({ transactions, onDelete, onSave }: Prop
                     <div className="flex justify-between items-center">
                       <div>
                         <Tooltip title={tx.category || 'Sem categoria'}>
-                          <p className="cursor-help">{tx.type} - {tx.date.split('/').slice(0, 2).join('/')}</p>
+                          <p className="cursor-help">
+                            {tx.type} - {new Date(tx.date.includes('/') ? parseDate(tx.date) : tx.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                          </p>
                         </Tooltip>
                         <p className={tx.value >= 0 ? 'text-green-600' : 'text-red-600'}>
                           R$ {tx.value.toFixed(2)}
