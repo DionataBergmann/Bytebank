@@ -16,12 +16,15 @@ import {
   setEditingState,
   updateTransaction
 } from '@/store/transactionSlice'
+import { useSnackbar } from 'notistack'
 
 export default function HomePage() {
   const dispatch = useDispatch<AppDispatch>()
   const router = useRouter()
 
-   const { transactions, loading } = useSelector((state: RootState) => state.transactions)
+  const { enqueueSnackbar } = useSnackbar()
+
+  const { transactions, loading } = useSelector((state: RootState) => state.transactions)
   const token = useSelector((state: RootState) => state.auth.token)
   const initialized = useSelector((state: RootState) => state.auth.initialized)
 
@@ -36,7 +39,7 @@ export default function HomePage() {
     dispatch(fetchTransactions())
   }, [dispatch, token, router, initialized])
 
-  if (!initialized) return null 
+  if (!initialized) return null
   if (!token) return null
 
   return (
@@ -50,9 +53,26 @@ export default function HomePage() {
         <div>
           <TransactionList
             transactions={transactions}
-            onDelete={(id) => dispatch(deleteTransaction(id))}
-            onEdit={(id) => dispatch(setEditingState(id))}
-            onSave={(id, updated) => dispatch(updateTransaction({ id, updated }))}
+            onEdit={(id) => {
+              dispatch(setEditingState(id))
+              enqueueSnackbar('Edição iniciada.', { variant: 'info' })
+            }}
+            onDelete={async (id) => {
+              try {
+                await dispatch(deleteTransaction(id)).unwrap()
+                enqueueSnackbar('Transação excluída com sucesso!', { variant: 'success' })
+              } catch (error) {
+                enqueueSnackbar('Erro ao excluir transação.', { variant: 'error' })
+              }
+            }}
+            onSave={async (id, updated) => {
+              try {
+                await dispatch(updateTransaction({ id, updated })).unwrap()
+                enqueueSnackbar('Transação atualizada com sucesso!', { variant: 'success' })
+              } catch (error) {
+                enqueueSnackbar('Erro ao atualizar transação.', { variant: 'error' })
+              }
+            }}
           />
         </div>
       </div>

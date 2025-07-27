@@ -45,6 +45,7 @@ export const loginUser = createAsyncThunk(
       const data = await response.json()
 
       localStorage.setItem('token', data.token)
+      localStorage.setItem('username', data.user.name)
       return {
         user: data.user,
         token: data.token

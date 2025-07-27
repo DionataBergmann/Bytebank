@@ -14,8 +14,15 @@ type Props = {
 export default function Header({ onToggleMenu }: Props) {
   const dispatch = useDispatch()
   const user = useSelector((state: RootState) => state.auth.user)
+  const [username, setUsername] = useState('')
+
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const storedName = localStorage.getItem('username')
+    if (storedName) setUsername(storedName)
+  }, [])
 
   const handleLogout = () => {
     dispatch(logout())
@@ -40,7 +47,7 @@ export default function Header({ onToggleMenu }: Props) {
       </button>
 
       <div className="ml-auto flex items-center gap-3 relative" ref={menuRef}>
-        <span className="text-sm">{user?.name}</span>
+        <span className="text-sm">{user?.name || username}</span>
 
         <FaUserCircle
           className="text-xl cursor-pointer"
@@ -52,7 +59,7 @@ export default function Header({ onToggleMenu }: Props) {
           <div className="absolute top-full right-0 mt-2 bg-white text-black shadow-lg rounded-md w-32 z-10">
             <button
               onClick={handleLogout}
-              className="w-full text-left px-4 py-2 hover:bg-gray-100"
+              className="w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer"
             >
               Sair
             </button>
