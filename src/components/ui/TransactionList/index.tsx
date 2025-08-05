@@ -42,7 +42,7 @@ function getMonthName(month: number) {
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ]
-  return meses[month - 1] || 'Mês inválido'
+  return meses[month] || 'Mês inválido'
 }
 
 function countActiveFilters(filters: Record<string, any>) {
