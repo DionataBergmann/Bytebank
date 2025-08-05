@@ -1,8 +1,10 @@
 # 💰 Bytebank
 
-Projeto frontend do Bytebank desenvolvido com [Next.js](https://nextjs.org), [Tailwind CSS](https://tailwindcss.com) e [Material UI](https://mui.com).
+🎓 Projeto desenvolvido como parte da **Fase 1 e 2 do MBA em Engenharia Frontend** na **FIAP**.
 
-🎥 [Assista à demonstração no YouTube](https://www.youtube.com/watch?v=SjfjRfZSjK0)
+📺 [YT - Vídeo demonstrativo](https://youtu.be/SjfjRfZSjK0)
+
+## 🚀 Getting Started
 
 ## 📦 Tecnologias
 
